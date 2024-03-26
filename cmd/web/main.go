@@ -1,14 +1,16 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/HINKOKO/bookings/pkg/config"
-	"github.com/HINKOKO/bookings/pkg/handlers"
-	"github.com/HINKOKO/bookings/pkg/render"
+	"github.com/HINKOKO/bookings/internal/config"
+	"github.com/HINKOKO/bookings/internal/handlers"
+	"github.com/HINKOKO/bookings/internal/models"
+	"github.com/HINKOKO/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
 )
 
@@ -18,6 +20,25 @@ var app config.AppConfig
 var session *scs.SessionManager
 
 func main() {
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(fmt.Sprintf("starting app on port %s", portNumber))
+	// _ = http.ListenAndServe(portNumber, nil)
+	srv := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
+
+	err = srv.ListenAndServe()
+	log.Fatal(err)
+}
+
+func run() error {
+	// What am I going to put in the session
+	gob.Register(models.Reservation{})
 
 	// Change this to true when in production
 	app.InProduction = false
@@ -30,14 +51,11 @@ func main() {
 	session.Cookie.Secure = app.InProduction       // Cookie crypted https instead of http -> true for production, false for dev
 
 	app.Session = session
-	// session.Cookie.Name = "session_id"
-	// session.Cookie.Domain = "example.com"
-	// session.Cookie.HttpOnly = true
-	// session.Cookie.Path = "/example/"
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("Cannot create template cache")
+		return err
 	}
 
 	app.TemplateCache = tc
@@ -47,17 +65,5 @@ func main() {
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 
-	// Now handled by 'routes.go' and package pat
-	// http.HandleFunc("/", handlers.Repo.Home)
-	// http.HandleFunc("/about", handlers.Repo.About)
-
-	fmt.Println(fmt.Sprintf("starting app on port %s", portNumber))
-	// _ = http.ListenAndServe(portNumber, nil)
-	srv := &http.Server{
-		Addr:    portNumber,
-		Handler: routes(&app),
-	}
-
-	err = srv.ListenAndServe()
-	log.Fatal(err)
+	return nil
 }
