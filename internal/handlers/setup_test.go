@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/HINKOKO/bookings/internal/config"
+	"github.com/HINKOKO/bookings/internal/driver"
 	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/HINKOKO/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
@@ -52,7 +53,7 @@ func getRoutes() http.Handler {
 	app.TemplateCache = tc
 	app.UseCache = true
 
-	repo := NewRepo(&app)
+	repo := NewRepo(&app, &driver.DB{})
 	NewHandlers(repo)
 	render.NewTemplates(&app)
 

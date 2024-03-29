@@ -7,10 +7,13 @@ import (
 	"net/http"
 
 	"github.com/HINKOKO/bookings/internal/config"
+	"github.com/HINKOKO/bookings/internal/driver"
 	"github.com/HINKOKO/bookings/internal/forms"
 	"github.com/HINKOKO/bookings/internal/helpers"
 	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/HINKOKO/bookings/internal/render"
+	"github.com/HINKOKO/bookings/internal/repository"
+	"github.com/HINKOKO/bookings/internal/repository/dbrepo"
 	// "github.com/HINKOKO/go-course/pkg/render"
 )
 
@@ -20,12 +23,14 @@ var Repo *Repository
 // repository type
 type Repository struct {
 	App *config.AppConfig
+	DB  repository.DatabaseRepo
 }
 
 // Creates a new repository
-func NewRepo(a *config.AppConfig) *Repository {
+func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: a,
+		DB:  dbrepo.NewPostgresRepo(db.SQL, a),
 	}
 }
 
@@ -36,6 +41,7 @@ func NewHandlers(r *Repository) {
 
 // Handler for Home page
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
+	m.DB.AllUsers()
 	render.RenderTemplate(w, r, "home.page.tmpl", &models.TemplateData{})
 }
 

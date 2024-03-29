@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/HINKOKO/bookings/internal/config"
+	"github.com/HINKOKO/bookings/internal/driver"
 	"github.com/HINKOKO/bookings/internal/handlers"
 	"github.com/HINKOKO/bookings/internal/helpers"
 	"github.com/HINKOKO/bookings/internal/models"
@@ -24,10 +25,11 @@ var infoLog *log.Logger
 var errorLog *log.Logger
 
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close() // Better place here for defering database closing
 
 	fmt.Println(fmt.Sprintf("starting app on port %s", portNumber))
 	// _ = http.ListenAndServe(portNumber, nil)
@@ -40,7 +42,7 @@ func main() {
 	log.Fatal(err)
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 	// What am I going to put in the session
 	gob.Register(models.Reservation{})
 
@@ -62,19 +64,29 @@ func run() error {
 
 	app.Session = session
 
+	// Connect to database
+	log.Println("Connecting to database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 database=bookings user=postgres password=")
+	if err != nil {
+		log.Fatal("Unable to connect database.Dying...")
+	}
+	log.Println("Connected to database dude.")
+
+	// defer db.SQL.Close() If we put this here  -- run finish 'running' and BAM you close the DB, not good
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("Cannot create template cache")
-		return err
+		return nil, err
 	}
 
 	app.TemplateCache = tc
 	app.UseCache = false
 
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 	helpers.NewHelpers(&app)
 
-	return nil
+	return db, err
 }
