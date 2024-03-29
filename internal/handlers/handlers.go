@@ -8,6 +8,7 @@ import (
 
 	"github.com/HINKOKO/bookings/internal/config"
 	"github.com/HINKOKO/bookings/internal/forms"
+	"github.com/HINKOKO/bookings/internal/helpers"
 	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/HINKOKO/bookings/internal/render"
 	// "github.com/HINKOKO/go-course/pkg/render"
@@ -35,28 +36,14 @@ func NewHandlers(r *Repository) {
 
 // Handler for Home page
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
-	remoteIp := r.RemoteAddr
-	m.App.Session.Put(r.Context(), "remote_ip", remoteIp)
-
 	render.RenderTemplate(w, r, "home.page.tmpl", &models.TemplateData{})
 }
 
 // Handler for About page
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-	// perform some logic
-	stringMap := make(map[string]string)
-	stringMap["test"] = "hello , again and again"
-
-	// We can now access the 'session'
-	// m.App.Session.Cookie = blabla
-
-	remoteIp := m.App.Session.GetString(r.Context(), "remote_ip")
-	stringMap["remote_ip"] = remoteIp
 
 	// send the data to the template
-	render.RenderTemplate(w, r, "about.page.tmpl", &models.TemplateData{
-		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, r, "about.page.tmpl", &models.TemplateData{})
 }
 
 // handler for Contacxt page
@@ -78,9 +65,9 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation - handles the posting of reservation form
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm() // PArse the form data
+	err := r.ParseForm() // Parse the form data
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 	// Populate a reservation variable with the form data
@@ -155,7 +142,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(resp, "", "    ")
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 	}
 	log.Println(string(out))
 	w.Header().Set("Content-Type", "application/json")
@@ -166,7 +153,7 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 	// type assertion trick with '.' connection
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		log.Println("cannot get item from session")
+		m.App.ErrorLog.Println("Cant get error from session")
 		m.App.Session.Put(r.Context(), "error", "Can't get reservation from session")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
