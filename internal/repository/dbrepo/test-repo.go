@@ -97,3 +97,20 @@ func (m *testDBRepo) GetRoomByID(id int) (models.Room, error) {
 
 	return room, nil
 }
+
+// GetUserID - Retrieve a user by its ID from database
+func (m *testDBRepo) GetUserByID(id int) (models.User, error) {
+	var u models.User
+	return u, nil
+}
+
+// UpdateUser - Update a user in the Database
+func (m *testDBRepo) UpdateUser(u models.User) error {
+	return nil
+}
+
+// Authenticate - authenticate a user
+// Compare what the user type - hash - compare Hashes
+func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, error) {
+	return 0, "", nil
+}

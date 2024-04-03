@@ -56,8 +56,6 @@ func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 
 // Handler for About page
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-
-	// send the data to the template
 	render.Template(w, r, "about.page.tmpl", &models.TemplateData{})
 }
 
@@ -428,4 +426,11 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 
 	m.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "/make-reservation", http.StatusTemporaryRedirect)
+}
+
+// ShowLogin - Redirect to Login page, for big boys only
+func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+	})
 }
