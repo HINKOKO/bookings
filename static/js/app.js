@@ -1,48 +1,101 @@
-{{ template "base" .}}
+// base layout function Prompt()
+function Prompt() {
+  let toast = function (c) {
+    const { msg = '', icon = 'success', position = 'top-end' } = c;
 
-{{define "content"}}
-<div class="container">
-  <div class="row">
-    <div class="col">
-      <img
-        src="/static/images/marjors-suite.png"
-        class="img-fluid img-thumbnail mx-auto d-block room-image"
-        alt="room image"
-      />
-    </div>
-  </div>
+    const Toast = Swal.mixin({
+      toast: true,
+      title: msg,
+      position: position,
+      icon: icon,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: toast => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      },
+    });
 
-  <div class="row">
-    <div class="col">
-      <h1 class="text-center mt-4">Major's Suite</h1>
-      <p>
-        Your home away form home, set on the majestic waters of the Atlantic
-        Ocean, this will be a vacation to remember. Your home away form home,
-        set on the majestic waters of the Atlantic Ocean, this will be a
-        vacation to remember. Your home away form home, set on the majestic
-        waters of the Atlantic Ocean, this will be a vacation to remember. Your
-        home away form home, set on the majestic waters of the Atlantic Ocean,
-        this will be a vacation to remember. Your home away form home, set on
-        the majestic waters of the Atlantic Ocean, this will be a vacation to
-        remember. Your home away form home, set on the majestic waters of the
-        Atlantic Ocean, this will be a vacation to remember.
-      </p>
-    </div>
-  </div>
+    Toast.fire({});
+  };
 
-  <div class="row">
-    <div class="col text-center">
-      <a id="check-availability-button" href="#!" class="btn btn-success"
-        >Check Availability</a
-      >
-    </div>
-  </div>
-</div>
+  let success = function (c) {
+    const { msg = '', title = '', footer = '' } = c;
 
-{{ end }}
+    Swal.fire({
+      icon: 'success',
+      title: title,
+      text: msg,
+      footer: footer,
+    });
+  };
 
-{{ define "js"}}
-<script>
+  let error = function (c) {
+    const { msg = '', title = '', footer = '' } = c;
+
+    Swal.fire({
+      icon: 'error',
+      title: title,
+      text: msg,
+      footer: footer,
+    });
+  };
+
+  async function custom(c) {
+    const { icon = '', msg = '', title = '', showConfirmButton = true } = c;
+
+    const { value: result } = await Swal.fire({
+      icon: icon,
+      title: title,
+      html: msg,
+      backdrop: false,
+      focusConfirm: false,
+      showCancelButton: true,
+      showConfirmButton: showConfirmButton,
+      willOpen: () => {
+        if (c.willOpen !== undefined) {
+          c.willOpen();
+        }
+      },
+
+      preConfirm: () => {
+        return [
+          document.getElementById('start').value,
+          document.getElementById('end').value,
+        ];
+      },
+      didOpen: () => {
+        if (c.didOpen !== undefined) {
+          c.didOpen();
+        }
+      },
+    });
+    if (result) {
+      if (result.dismiss !== Swal.DismissReason.cancel) {
+        if (result.value !== '') {
+          if (c.callback !== undefined) {
+            c.callback(result);
+          }
+        } else {
+          c.callback(false);
+        }
+      } else {
+        c.callback(false);
+      }
+    }
+  }
+
+  return {
+    toast: toast,
+    success: success,
+    error: error,
+    custom: custom,
+  };
+}
+
+// Javascript for Rooms
+function roomHandler(id) {
   document
     .getElementById('check-availability-button')
     .addEventListener('click', function () {
@@ -63,6 +116,7 @@
             </div>
           </form>
           `;
+      // attention.error({ msg: 'Hello TRevor', footer: 'trevor is hot' });
       attention.custom({
         msg: html,
         title: 'pick your dates',
@@ -82,7 +136,7 @@
           let form = document.getElementById('check-availability-form');
           let formData = new FormData(form);
           formData.append('csrf_token', '{{.CSRFToken}}');
-          formData.append('room_id', '2');
+          formData.append('room_id', id);
 
           fetch('/search-availability-json', {
             method: 'post',
@@ -115,5 +169,4 @@
         },
       });
     });
-</script>
-{{ end }}
+}

@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/HINKOKO/bookings/internal/config"
-	"github.com/HINKOKO/bookings/internal/driver"
 	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/HINKOKO/bookings/internal/render"
 	"github.com/alexedwards/scs/v2"
@@ -23,8 +23,9 @@ import (
 var app config.AppConfig
 var session *scs.SessionManager
 var pathToTemplates = "./../../templates"
+var functions = template.FuncMap{}
 
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 	gob.Register(models.Reservation{})
 
 	// Change this to true when in production
@@ -45,6 +46,12 @@ func getRoutes() http.Handler {
 
 	app.Session = session
 
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
+	defer close(mailChan)
+
+	listenForMail()
+
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal("Cannot create template cache")
@@ -53,10 +60,24 @@ func getRoutes() http.Handler {
 	app.TemplateCache = tc
 	app.UseCache = true
 
-	repo := NewRepo(&app, &driver.DB{})
+	repo := NewTestRepo(&app)
 	NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 
+	// Run the tests before dying
+	os.Exit(m.Run())
+}
+
+// listenForMail - test the mail channel
+func listenForMail() {
+	go func() {
+		for {
+			_ = <-app.MailChan
+		}
+	}()
+}
+
+func getRoutes() http.Handler {
 	mux := chi.NewRouter()
 	mux.Use(middleware.Recoverer)
 	// mux.Use(NoSurf) // CSRFTOken
@@ -116,7 +137,7 @@ func CreateTestTemplateCache() (map[string]*template.Template, error) {
 	// Range through the 'pages'.tmpl
 	for _, page := range pages {
 		name := filepath.Base(page)
-		ts, err := template.New(name).ParseFiles(page)
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return myCache, err
 		}

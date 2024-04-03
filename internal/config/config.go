@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 
+	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/alexedwards/scs/v2"
 )
 
@@ -15,6 +16,7 @@ type AppConfig struct {
 	ErrorLog      *log.Logger
 	InProduction  bool
 	Session       *scs.SessionManager
+	MailChan      chan models.MailData
 }
 
 // beware of IMPORT CYCLE !!!

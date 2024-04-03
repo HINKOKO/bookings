@@ -29,9 +29,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.SQL.Close() // Better place here for defering database closing
+	// Better place here for defering database closing
+	defer db.SQL.Close()
 
-	fmt.Println(fmt.Sprintf("starting app on port %s", portNumber))
+	defer close(app.MailChan)
+	listenForMail()
+
+	// test to send email
+	msg := models.MailData{
+		To:      "john@doe.ca",
+		From:    "me@here.com",
+		Subject: "Some",
+		Content: "content",
+	}
+	app.MailChan <- msg
+
+	fmt.Printf("starting app on port %s\n", portNumber)
 	// _ = http.ListenAndServe(portNumber, nil)
 	srv := &http.Server{
 		Addr:    portNumber,
@@ -45,6 +58,12 @@ func main() {
 func run() (*driver.DB, error) {
 	// What am I going to put in the session
 	gob.Register(models.Reservation{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
+
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
 
 	// Change this to true when in production
 	app.InProduction = false
@@ -85,7 +104,7 @@ func run() (*driver.DB, error) {
 
 	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
 	return db, err
