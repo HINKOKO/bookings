@@ -2,7 +2,7 @@
 
 ## **Description**
 
-This project is a follow-along tutorial, created by Instructor **Trevor Sawler** for getting hands dirty on the Go programming language, used for backend.<br>
+This project is a follow-along tutorial, created by Instructor **Trevor Sawler** for getting hands dirty on the Go programming language, used for backend purposes on this project<br>
 We create a booking management system, with an admin panel too, for a fictionnal Bed & Breakfast we pretend to own<br>
 
 <u>We cover the following:</u>
