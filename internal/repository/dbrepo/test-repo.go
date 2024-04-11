@@ -112,5 +112,5 @@ func (m *testDBRepo) UpdateUser(u models.User) error {
 // Authenticate - authenticate a user
 // Compare what the user type - hash - compare Hashes
 func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, error) {
-	return 0, "", nil
+	return 1, "", nil
 }
