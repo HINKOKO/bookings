@@ -42,9 +42,16 @@ func routes(app *config.AppConfig) http.Handler {
 
 	// Protected route, built-in from Mux
 	mux.Route("/admin", func(mux chi.Router) {
+		// Comment following line if you want to disable Auth protection for development testing purposes
 		mux.Use(Auth)
 		mux.Get("/dashboard", handlers.Repo.AdminDashboard)
-	})
 
+		mux.Get("/reservations-new", handlers.Repo.AdminNewReservations)
+		mux.Get("/reservations-all", handlers.Repo.AdminAllReservations)
+		mux.Get("/reservations-calendar", handlers.Repo.AdminReservationsCalendar)
+
+		mux.Get("/reservations/{src}/{id}", handlers.Repo.AdminShowReservation)
+		mux.Post("/reservations/{src}/{id}", handlers.Repo.AdminPostShowReservation)
+	})
 	return mux
 }

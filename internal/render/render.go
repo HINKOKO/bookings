@@ -7,19 +7,28 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/HINKOKO/bookings/internal/config"
 	"github.com/HINKOKO/bookings/internal/models"
 	"github.com/justinas/nosurf"
 )
 
-var functions = template.FuncMap{}
+// 'functions' used to pass functions available to go templates
+var functions = template.FuncMap{
+	"humanDate": HumanDate,
+}
 var app *config.AppConfig
 var pathToTemplates = "./templates"
 
 // NewRenderer - sets the config for the template package
 func NewRenderer(a *config.AppConfig) {
 	app = a
+}
+
+// HumanDate - Handles database ugly date format and convert to nicely readable date
+func HumanDate(t time.Time) string {
+	return t.Format("2006-01-02")
 }
 
 // AddDefaultData - adds data for all the templates

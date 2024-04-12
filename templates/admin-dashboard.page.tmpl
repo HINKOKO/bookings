@@ -1,12 +1,10 @@
-{{ template "base" .}}
+{{ template "admin" .}}
 
-{{ define "content" }}
-<div class="container">
-  <div class="row">
-    <div class="col">
-      <h1>This page is secure by the best encryption of universe</h1>
-    </div>
-  </div>
-</div>
+{{ define "page-title" }}
+DashBoard-Dude
+{{ end }}
+
+{{define "content"}}
+<div class="col-md-12">Dashboard content</div>
 
 {{ end }}
