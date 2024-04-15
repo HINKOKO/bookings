@@ -16,10 +16,28 @@ import (
 
 // 'functions' used to pass functions available to go templates
 var functions = template.FuncMap{
-	"humanDate": HumanDate,
+	"humanDate":  HumanDate,
+	"formatDate": FormatDate,
+	"iterate":    Iterate,
+	"add":        Add,
 }
 var app *config.AppConfig
 var pathToTemplates = "./templates"
+
+func Add(a, b int) int {
+	return a + b
+}
+
+// Iterate - returns a slice of ints, starting at 1 to count
+func Iterate(count int) []int {
+	var i int
+	var items []int
+
+	for i = 0; i < count; i++ {
+		items = append(items, i)
+	}
+	return items
+}
 
 // NewRenderer - sets the config for the template package
 func NewRenderer(a *config.AppConfig) {
@@ -29,6 +47,11 @@ func NewRenderer(a *config.AppConfig) {
 // HumanDate - Handles database ugly date format and convert to nicely readable date
 func HumanDate(t time.Time) string {
 	return t.Format("2006-01-02")
+}
+
+// FormatDate - formats a date with given string as param
+func FormatDate(t time.Time, f string) string {
+	return t.Format(f)
 }
 
 // AddDefaultData - adds data for all the templates
